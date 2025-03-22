@@ -16,25 +16,40 @@ const isValid = (username) => {
   return users.some(user => user.username === username);
 }
 
-const authenticatedUser = (username, password)=>{ //returns boolean
+const authenticatedUser = (username, password) => { //returns boolean
   return users.some(user => user.username === username && user.password === password);
 }
 
+// User registration
+regd_users.post("/register", (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: "Username and password are required" });
+  }
+
+  if (isValid(username)) {
+    return res.status(400).json({ message: "Username already exists" });
+  }
+
+  users.push({ username, password });
+  return res.status(201).json({ message: "User successfully registered" });
+});
+
 //only registered users can login
-regd_users.post("/login", (req,res) => {
+regd_users.post("/login", (req, res) => {
   const { username, password } = req.body;
 
   if (!isValid(username, password)) {
     return res.status(400).json({ message: "Invalid username" });
   }
 
-  if (authenticatedUser(username,password)) {
+  if (authenticatedUser(username, password)) {
     let accessToken = jwt.sign({
-        data: password
-      }, 'access', { expiresIn: 60 * 20 });
-      req.session.authorization = {
-        accessToken, username
-
+      data: password
+    }, 'access', { expiresIn: 60 * 20 });
+    req.session.authorization = {
+      accessToken, username
     }
     return res.status(200).send("Customer successfully logged in");
   } else {
